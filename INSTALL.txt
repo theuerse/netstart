@@ -1,0 +1,15 @@
+
+#Obtain script-folder from http://icn.itec.aau.at/download/ (pi_scripts)
+(cd netstart)
+wget http://icn.itec.aau.at/wp-content/uploads/2016/02/pi_scripts.zip
+unzip pi_scripts.zip
+
+
+# Give apache-system-user write-access to scripts/generated_network_top.txt (transfer ownership)
+(cd pi-network)
+sudo chown www-data:www-data generated_network_top.txt
+
+
+# Give apache-system-user write-access to scripts/apps.py (transfer ownership)
+(cd pi-network)
+sudo chown www-data:www-data apps.py

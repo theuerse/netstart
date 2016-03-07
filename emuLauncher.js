@@ -562,7 +562,12 @@ function showEmulationStartDialog(topologyFileContent){
 		width: 400,
 		buttons: {
 			Start: function(){
-				console.log("Starting Emulation");
+				console.log("Starting emulation...");
+				$.post("start.php",{topology: topologyFileContent,
+					aLogic: $("#aLogic").val(), fwStrategy: $("#fwStrategy").val()}).done(function(data){
+						console.log("encountered error(s):");
+						console.log(data);
+					});
 				$(this).dialog("close");
 			},
 			Cancel: function(){
