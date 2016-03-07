@@ -59,8 +59,23 @@
 		<p>The network is not connected.</p>
 	</div>
 
-	<div id="topologyDownloadDialog" title="The network-topology file has been created">
-		<a id="downloadLink" download="generated_network_top.txt">Download file</a>
+	<div id="emulationStartDialog" title="Start - preparations">
+		<fieldset>
+				<label id="aLogicLabel" for="aLogic">Adaption-logic</label>
+				<select name"aLogic" id="aLogic">
+					<option selected="selected" value="player::SVCRateBasedAdaptationLogic">rate-based</option>
+					<option value="player::SVCBufferAdaptationLogic">buffer-based</option>
+				</select>
+
+				<label id="fwStrategyLabel" for="fwStrategy">Forwarding-strategy</label>
+				<select name="fwStrategy" id="fwStrategy">
+					<option value="best-route">best-route</option>
+					<option value="broadcast">broadcast</option>
+					<option value="ncc">ncc</option>
+					<option value="omccrf">omccrf</option>
+					<option value="saf">saf</option>
+				</select>
+		</fieldset>
 	</div>
 
 	<div id="presetDialog" title="Edit edge preset values">

@@ -293,13 +293,13 @@ function drawLegend(){
 
 				// add a button responsible to create/ let download the topology-file of the current network
 				// or show a error-dialog if the network is not connected (there exist isolated nodes)
-				$('#legendList').append('<li class="list-group-item"><button id="exportBtn">export topology</button></li>');
-				$('#exportBtn').button().click(function(event){
+				$('#legendList').append('<li class="list-group-item"><button id="startBtn">start emulation</button></li>');
+				$('#startBtn').button().click(function(event){
 					stopAddingEdges();
 					if(isNetworkConnected()){
-						makeFileAvailable(getTopologyFile());
+						showEmulationStartDialog(getTopologyFile());
 					}else {
-						showMessage("The network-topology file could not be created: The network is not connected.","danger");
+						showMessage("Cannot start: The network is not connected.","danger");
 					}
 				});
 
@@ -552,30 +552,24 @@ function getTopologyFile(){
 	return fileBuffer.join("\n");
 }
 
-// make the networkTopology-File-content available to the user (downloadable)
-function makeFileAvailable(fileContent){
-	var data = new Blob([fileContent], {type: 'text/plain'});
-
-	if(topologyFile !== null){
-		// manually clean up to avoid memory leaks
-		window.URL.revokeObjectURL(topologyFile);
-	}
-
-	// store locally / get url to file
-	topologyFile = window.URL.createObjectURL(data);
-	showTopologyDownloadDialog(topologyFile);
-}
-
 // display a dialog with the option to download a generated Network Topology
-function showTopologyDownloadDialog(fileUrl){
-	$("#topologyDownloadDialog").dialog({
+function showEmulationStartDialog(topologyFileContent){
+	$("#aLogic").selectmenu();
+	$("#fwStrategy").selectmenu();
+
+	$("#emulationStartDialog").dialog({
 		modal: true,
 		width: 400,
-		buttons: {Ok: function(){$(this).dialog("close");}}
+		buttons: {
+			Start: function(){
+				console.log("Starting Emulation");
+				$(this).dialog("close");
+			},
+			Cancel: function(){
+				$(this).dialog("close");
+			}
+		}
 	});
-
-	$("#downloadLink").attr("href", fileUrl); // update anchor-target
-	$("#downloadLink").button();
 }
 
 // changes the respective width of edges according to the relation

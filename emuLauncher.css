@@ -41,3 +41,16 @@ html, body {
   width: 0;
   height: 0;
 }
+
+#aLogicLabel, #fwStrategyLabel {
+	display: block;
+}
+
+div.ui-selectmenu-open, #fwStrategy-menu, #aLogic-menu {
+    position: absolute;
+    z-index: 65535;
+}
+
+#aLogic, #fwStrategy {
+	width: 250px;
+}
