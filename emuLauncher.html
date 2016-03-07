@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href="res/vis/vis.min.css" rel="stylesheet" />
+    <link href="res/bootstrap/css/bootstrap.min.css", rel="stylesheet" />
+    <link href="emuLauncher.css", rel="stylesheet" />
+    <link href="res/jquery-ui/jquery-ui.min.css", rel="stylesheet" />
+
+    <script type="text/javascript" src="res/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="res/jquery-ui/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="emuLauncher.js"></script>
+    <script type="text/javascript" src="res/vis/vis.min.js"></script>
+
+    <title>Emulation Launcher</title>
+
+</head>
+<body>
+    <div id="javaScriptAlert"class="alert alert-danger" role="alert">
+		This Page needs JavaScript in order to work, please enable it.
+	</div>
+
+	<div  id="messageContainer" class="alert alert-dismissible alert-info" role="alert">
+		 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		 <p id="message"></p>
+	</div>
+
+	<div id="legendContainer"></div>
+  <div id="graphContainer"></div>
+
+	<div id="edgeDialog" title="Edit edge parameters">
+		<!-- Sub-title identifying the edge -->
+		<span id="edgeTitle"></span>
+
+		<table id="edgeParamTable">
+			<tr> 	<!-- Bandwidth right -->
+				<td><label for="bandwidthRight">Bandwidth <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></label></td>
+				<td><input class="spinner" id="bandwidthRight"></td>
+				<td>[kbps]<td>
+			</tr>
+			<tr> 	<!-- Bandwidth left -->
+				<td><label for="bandwidthLeft">Bandwidth <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></label></td>
+				<td><input class="spinner" id="bandwidthLeft"></td>
+				<td>[kbps]<td>
+			</tr>
+			<tr> 	<!-- Delay right -->
+				<td><label for="delayRight">Delay <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></label></td>
+				<td><input class="spinner" id="delayRight"></td>
+				<td>[ms]<td>
+			</tr>
+			<tr> 	<!-- Delay left -->
+				<td><label for="delayLeft">Delay <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></label></td>
+				<td><input class="spinner" id="delayLeft"></td>
+				<td>[ms]<td>
+			</tr>
+		</table>
+	</div>
+
+	<div id="topologyErrorDialog" title="The network-topology file could not be created">
+		<p>The network is not connected.</p>
+	</div>
+
+	<div id="topologyDownloadDialog" title="The network-topology file has been created">
+		<a id="downloadLink" download="generated_network_top.txt">Download file</a>
+	</div>
+
+	<div id="presetDialog" title="Edit edge preset values">
+		<p>Newly created edges will posess a random bandwidth / delay out of the given range</p>
+
+		<div class ="controlGroup">
+			<p>
+				<label for="bandwidthRange">Bandwidth will range from:</label>
+				<input type="text" id="bandwidthRange" readonly style="border:0; color:#f6931f; font-weight:bold;">
+			</p>
+			<div id="bandwidthRangeSlider"></div>
+		</div>
+
+		<div class="controlGroup">
+			<p>
+				<label for="delayRange">Delay will range from:</label>
+				<input type="text" id="delayRange" readonly style="border:0; color:#f6931f; font-weight:bold;">
+			</p>
+			<div id="delayRangeSlider"></div>
+		</div>
+	</div>
+</body>
+</html>
