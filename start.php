@@ -54,13 +54,13 @@ if (file_put_contents(SCRIPT_DIRECTORY . "/apps.py", $newAppsContent) === false)
 // End execution of emulation.py
 exec("pkill -9 -f emulation.py");
 
-// Perform cleanup (neccessary?)
+// Perform cleanup (necessary?)
 // TODO: stop logging?
 
 //
 // Start the emulation
 //
 $command = "python " . SCRIPT_DIRECTORY ."/emulation.py --network generated_network_top.txt";
-exec($command . " > /dev/null 2>&1 &"); // run emulation.py in background (avoid stalling php-script)
+exec("cd " . SCRIPT_DIRECTORY . "; "$command . " > /dev/null 2>&1 &"); // run emulation.py in background (avoid stalling php-script)
 
 ?>
