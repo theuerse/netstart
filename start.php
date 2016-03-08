@@ -5,7 +5,17 @@ define("SCRIPT_DIRECTORY", "pi-network");
 //echo $_POST["aLogic"];
 //echo $_POST["fwStrategy"];
 
-//TODO: CHECK validity of POST-params
+// server-side check of validity of POST-params
+if(empty($_POST["topology"])){
+  exit("given network-topology is empty");
+}
+if(!in_array($_POST["aLogic"], array("player::SVCBufferAdaptationLogic","player::SVCRateBasedAdaptationLogic"))){
+  exit($_POST["aLogic"] . " is a unknown adaption-logic");
+}
+if(!in_array($_POST["fwStrategy"], array("saf", "broadcast", "best-route", "ncc", "omccrf"))){
+  exit($POST["fwStrategy"] . " is a unknown forwarding-strategy");
+}
+
 
 //
 // write topology-file
