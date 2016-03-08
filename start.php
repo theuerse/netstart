@@ -50,5 +50,6 @@ if (file_put_contents(SCRIPT_DIRECTORY . "/apps.py", $newAppsContent) === false)
 //
 // Start the emulation
 //
-//TODO: implement!
+$command = "python " . SCRIPT_DIRECTORY ."/emulation.py --network generated_network_top.txt";
+exec($command . " > /dev/null 2>&1 &"); // run emulation.py in background (avoid stalling php-script)
 ?>
