@@ -60,7 +60,7 @@ exec("pkill -9 -f emulation.py");
 //
 // Start the emulation
 //
-$command = "python " . SCRIPT_DIRECTORY ."/emulation.py --network generated_network_top.txt";
-exec("cd " . SCRIPT_DIRECTORY . "; "$command . " > /dev/null 2>&1 &"); // run emulation.py in background (avoid stalling php-script)
+$command = "/usr/bin/python emulation.py --network generated_network_top.txt";
+exec("cd " . SCRIPT_DIRECTORY . " && " . $command . " > log.txt 2>&1 &"); // run emulation.py in background (avoid stalling php-script)
 
 ?>

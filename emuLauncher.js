@@ -146,6 +146,12 @@ var options = {
         mousePosition.y = e.pageY;
       });
 
+			$( document ).ajaxError(function( event, request, settings ) {
+				if(request.status === 403){
+					showMessage("Calling this function is not allowed from your location.","danger");
+				}
+			});
+
 			// disable text-selection (especially helpful on buttons / draggable images)
 			$(document).bind('selectstart', function(e) {
 				e.preventDefault();
@@ -567,6 +573,7 @@ function showEmulationStartDialog(topologyFileContent){
 					aLogic: $("#aLogic").val(), fwStrategy: $("#fwStrategy").val()}).done(function(data){
 						console.log("encountered error(s):");
 						console.log(data);
+						if(data !== "") showMessage(data,"danger");
 					});
 				$(this).dialog("close");
 			},
