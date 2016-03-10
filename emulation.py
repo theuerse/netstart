@@ -45,7 +45,7 @@ PI_START_SUFFIX = arguments.piStartSuffix
 PI_END_SUFFIX = arguments.piEndSuffix
 FW_STRATEGIES = arguments.forwardingStrategies
 EMULATION_RUNS = arguments.runs
-if arguments.resultFolder == "./emulation_results/"):
+if arguments.resultFolder == "./emulation_results/":
 	DESTINATION_FOLDER = arguments.resultFolder + datetime.now().strftime('%d_%m_%Y_%H:%M')
 else:
 	DESTINATION_FOLDER = arguments.resultFolder
@@ -75,9 +75,10 @@ for emu_run in range(0,EMULATION_RUNS):
 
 	#start logging
 	startLogging(pi_list, PI_START_SUFFIX, MNG_PREFIX)
-	if(RECORD_RTLOGGING)
-	    os.makedirs(RECORDING_TARGETDIR)
-		startRecording(RECORDING_SOURCEDIR, RECORDING_TARGETDIR);
+	if RECORD_RTLOGGING:
+		if not os.path.exists(RECORDING_TARGETDIR):
+			os.makedirs(RECORDING_TARGETDIR)
+		startRecording(RECORDING_SOURCEDIR, RECORDING_TARGETDIR)
 
 	#start the apps
 	client_ips = startApps(pi_list, property_list, MNG_PREFIX, PI_START_SUFFIX)
@@ -87,8 +88,8 @@ for emu_run in range(0,EMULATION_RUNS):
 
 	#stop logging
 	stopLogging(pi_list, PI_START_SUFFIX, MNG_PREFIX)
-	if(RECORD_RTLOGGING)
-		stopRecording();
+	if RECORD_RTLOGGING:
+		stopRecording()
 
 	#kill all NFDs
 	killNFDs(pi_list, MNG_PREFIX, PI_START_SUFFIX)

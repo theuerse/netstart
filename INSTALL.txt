@@ -4,12 +4,8 @@
 wget http://icn.itec.aau.at/wp-content/uploads/2016/02/pi_scripts.zip
 unzip pi_scripts.zip
 
+# replace stock-scripts with modified ones
+sudo cp emulation.py deploy_network.py recorder.py recorder.sh pi-network
 
 # Give apache-system-user write-access to scripts/generated_network_top.txt (transfer ownership)
-(cd pi-network)
-sudo chown www-data:www-data generated_network_top.txt
-
-
-# Give apache-system-user write-access to scripts/apps.py (transfer ownership)
-(cd pi-network)
-sudo chown www-data:www-data apps.py
+sudo chown -R www-data:www-data pi-network
