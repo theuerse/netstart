@@ -1,0 +1,4 @@
+<Files "start.php">
+  Require ip 143.205.122.57
+  Require ip 127.0.0.1 
+</Files>

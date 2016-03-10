@@ -1,10 +1,7 @@
 import os
 import sys
 
-SOURCEDIR = "./"
-TARGETDIR = "./"
-
-def startRecording():
+def startRecording(SOURCEDIR, TARGETDIR):
     os.system("bash recorder.sh " + SOURCEDIR + " " + TARGETDIR + " > /dev/null 2>&1 &")
 
 def stopRecording():

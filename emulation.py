@@ -15,12 +15,18 @@ from pi_logging import *
 from datetime import datetime
 from gather_results import *
 import rand_network as rand_network
+from recorder import *
 
 #default parameters
 
 MNG_PREFIX = "192.168.0."
 EMU_PREFIX = "192.168.1."
 GATEWAY = "192.168.0.1"
+
+# rtlogging - recording
+RECORD_RTLOGGING = True
+RECORDING_SOURCEDIR ="/run/shm"
+RECORDING_TARGETDIR = ""
 
 #argument parsing
 arg_parser = argparse.ArgumentParser(description="Script for Running Emulations on the PI-Network")
@@ -30,7 +36,7 @@ arg_parser.add_argument("--pi-start-suffix", action="store", dest="piStartSuffix
 arg_parser.add_argument("--pi-end-suffix", action="store", dest="piEndSuffix", default=29, type=int, help="Suffix of the IP for the last PI")
 arg_parser.add_argument("--fw-strategies", action="store", dest="forwardingStrategies", default=["saf", "broadcast", "best-route", "ncc", "omccrf"], nargs="+", choices=["saf", "broadcast", "best-route", "ncc", "omccrf"], help="Forwarding Strategies for which ndn-routes are deployed")
 arg_parser.add_argument("--emulation-runs", action="store", dest="runs", default=1, type=int, help="Number of Emulations to perform")
-arg_parser.add_argument("--result-folder", action="store", dest="resultFolder", default=os.getenv("HOME") + "/emulation_results/")
+arg_parser.add_argument("--result-folder", action="store", dest="resultFolder", default="./emulation_results/")
 arguments = arg_parser.parse_args()
 
 NETWORK = arguments.network
@@ -39,10 +45,12 @@ PI_START_SUFFIX = arguments.piStartSuffix
 PI_END_SUFFIX = arguments.piEndSuffix
 FW_STRATEGIES = arguments.forwardingStrategies
 EMULATION_RUNS = arguments.runs
-if arguments.resultFolder == (os.getenv("HOME") + "/emulation_results/"):
+if arguments.resultFolder == "./emulation_results/"):
 	DESTINATION_FOLDER = arguments.resultFolder + datetime.now().strftime('%d_%m_%Y_%H:%M')
 else:
 	DESTINATION_FOLDER = arguments.resultFolder
+
+RECORDING_TARGETDIR = "./recordings/" + datetime.now().strftime('%d_%m_%Y_%H:%M')
 
 print "Starting " + str(EMULATION_RUNS) + " Emulation(s): "
 
@@ -67,6 +75,9 @@ for emu_run in range(0,EMULATION_RUNS):
 
 	#start logging
 	startLogging(pi_list, PI_START_SUFFIX, MNG_PREFIX)
+	if(RECORD_RTLOGGING)
+	    os.makedirs(RECORDING_TARGETDIR)
+		startRecording(RECORDING_SOURCEDIR, RECORDING_TARGETDIR);
 
 	#start the apps
 	client_ips = startApps(pi_list, property_list, MNG_PREFIX, PI_START_SUFFIX)
@@ -76,6 +87,8 @@ for emu_run in range(0,EMULATION_RUNS):
 
 	#stop logging
 	stopLogging(pi_list, PI_START_SUFFIX, MNG_PREFIX)
+	if(RECORD_RTLOGGING)
+		stopRecording();
 
 	#kill all NFDs
 	killNFDs(pi_list, MNG_PREFIX, PI_START_SUFFIX)
