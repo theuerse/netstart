@@ -9,3 +9,5 @@ sudo cp emulation.py deploy_network.py recorder.py recorder.sh pi-network
 
 # Give apache-system-user write-access to scripts/generated_network_top.txt (transfer ownership)
 sudo chown -R www-data:www-data pi-network
+
+# For recording, install inotify (e.g. sudo apt-get install inotify-tools)
