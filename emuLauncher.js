@@ -1,3 +1,4 @@
+var netvisURL ="../netvis/networkLayout.html?top=../netstart/pi-network/generated_network_top.txt";
 var mousePosition = {x: 0, y: 0};
 
 var images = {
@@ -297,7 +298,7 @@ function drawLegend(){
 					showEdgePresetEditDialog();
 				});
 
-				// add a button responsible to create/ let download the topology-file of the current network
+				// add a button for starting the emulation
 				// or show a error-dialog if the network is not connected (there exist isolated nodes)
 				$('#legendList').append('<li class="list-group-item"><button id="startBtn">start emulation</button></li>');
 				$('#startBtn').button().click(function(event){
@@ -307,6 +308,13 @@ function drawLegend(){
 					}else {
 						showMessage("Cannot start: The network is not connected.","danger");
 					}
+				});
+
+				// opens a new tab displaying a network-overview
+				$('#legendList').append('<li class="list-group-item"><button id="showBtn">watch emulation</button></li>');
+				$('#showBtn').button().click(function(event){
+					var overviewWindow = window.open(netvisURL, netvisURL);
+					overviewWindow.focus();
 				});
 
 				// add a generally available button to add new edges to the network
@@ -574,6 +582,9 @@ function showEmulationStartDialog(topologyFileContent){
 						console.log("encountered error(s):");
 						console.log(data);
 						if(data !== "") showMessage(data,"danger");
+
+						var overviewWindow = window.open(netvisURL, netvisURL);
+						overviewWindow.focus();
 					});
 				$(this).dialog("close");
 			},
