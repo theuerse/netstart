@@ -19,6 +19,7 @@ var network;
 var edgeInformation = {};
 var edgeCoolTipTimeout = {};
 var messageHideTimeout = {};
+var emulationStateCheckInterval = {};
 var topologyFile;
 
 var arrowRight = '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>';
@@ -168,7 +169,20 @@ var options = {
 			// start observing the graph-container
 			setupGraphManipulationListener();
 
+      // update playback-button with current state of playback
+      updateEmulationState();
+      emulationStateCheckInterval = setInterval(function(){updateEmulationState();}, 2000);
 });
+
+function updateEmulationState(){
+  $.post("isRunning.php").done(function(data){
+    if(data === "1"){
+      $('#emulationBtn').button("option","label","stop emulation");
+    }else if(data === "0"){
+      $('#emulationBtn').button("option","label","start emulation");
+    }
+  });
+}
 
 // Adds a change-listener to the visjs-manipulation toolbar
 // in order to be able to correct faulty behavior
@@ -298,15 +312,21 @@ function drawLegend(){
 					showEdgePresetEditDialog();
 				});
 
-				// add a button for starting the emulation
+				// add a button for starting/stopping the emulation
 				// or show a error-dialog if the network is not connected (there exist isolated nodes)
-				$('#legendList').append('<li class="list-group-item"><button id="startBtn">start emulation</button></li>');
-				$('#startBtn').button().click(function(event){
+				$('#legendList').append('<li class="list-group-item"><button id="emulationBtn">start emulation</button></li>');
+				$('#emulationBtn').button().click(function(event){
 					stopAddingEdges();
-					if(isNetworkConnected()){
-						showEmulationStartDialog(getTopologyFile());
-					}else {
-						showMessage("Cannot start: The network is not connected.","danger");
+
+					if($(this).button("option","label") === "start emulation"){
+						if(isNetworkConnected()){
+							showEmulationStartDialog(getTopologyFile());
+						}else {
+							showMessage("Cannot start: The network is not connected.","danger");
+						}
+					}else{
+							stopEmulation();
+							$(this).button("option","label","start emulation");
 					}
 				});
 
@@ -579,12 +599,17 @@ function showEmulationStartDialog(topologyFileContent){
 				console.log("Starting emulation...");
 				$.post("start.php",{topology: topologyFileContent,
 					aLogic: $("#aLogic").val(), fwStrategy: $("#fwStrategy").val()}).done(function(data){
-						console.log("encountered error(s):");
-						console.log(data);
-						if(data !== "") showMessage(data,"danger");
 
-						var overviewWindow = window.open(netvisURL, netvisURL);
-						overviewWindow.focus();
+						if(data !== "") {
+							console.log("encountered error(s):");
+							console.log(data);
+							showMessage(data,"danger");
+						}else{
+							$('#playbackBtn').button("option","label","stop emulation");
+
+							var overviewWindow = window.open(netvisURL, netvisURL);
+							overviewWindow.focus();
+						}
 					});
 				$(this).dialog("close");
 			},
@@ -593,6 +618,12 @@ function showEmulationStartDialog(topologyFileContent){
 			}
 		}
 	});
+}
+
+function stopEmulation(){
+  $.post("stop.php").done(function(data){
+    console.log("stopped emulation");
+  });
 }
 
 // changes the respective width of edges according to the relation
