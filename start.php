@@ -1,4 +1,5 @@
 <?php
+require 'emulationUtils.php';
 define("SCRIPT_DIRECTORY", "pi-network");
 
 //echo $_POST["topology"];
@@ -15,6 +16,10 @@ if(!in_array($_POST["aLogic"], array("player::SVCBufferAdaptationLogic","player:
 if(!in_array($_POST["fwStrategy"], array("saf", "broadcast", "best-route", "ncc", "omccrf"))){
   exit($POST["fwStrategy"] . " is a unknown forwarding-strategy");
 }
+
+
+// do not start if a emulation is already running
+if(isEmulationRunning()) exit("Could not start emulation, there is a emulation already running.");
 
 
 //
@@ -47,15 +52,6 @@ if (file_put_contents(SCRIPT_DIRECTORY . "/apps.py", $newAppsContent) === false)
 }
 
 
-
-//
-// (Re-)start emulation
-//
-// End execution of emulation.py
-exec("pkill -9 -f emulation.py");
-
-// Perform cleanup (necessary?)
-// TODO: stop logging?
 
 //
 // Start the emulation

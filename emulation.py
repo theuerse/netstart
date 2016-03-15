@@ -24,7 +24,7 @@ EMU_PREFIX = "192.168.1."
 GATEWAY = "192.168.0.1"
 
 # rtlogging - recording
-RECORD_RTLOGGING = True
+RECORD_RTLOGGING = False
 RECORDING_SOURCEDIR ="/run/shm"
 RECORDING_TARGETDIR = ""
 
@@ -94,8 +94,8 @@ for emu_run in range(0,EMULATION_RUNS):
 	#kill all NFDs
 	killNFDs(pi_list, MNG_PREFIX, PI_START_SUFFIX)
 
-	#collect and store logs
-	gatherResults(pi_list, MNG_PREFIX, DESTINATION_FOLDER, emu_run, client_ips, PI_START_SUFFIX)
+	# do not collect and store logs
+	#gatherResults(pi_list, MNG_PREFIX, DESTINATION_FOLDER, emu_run, client_ips, PI_START_SUFFIX)
 
 	print "Finished Emulation Run " + str(emu_run+1) + "/" + str(EMULATION_RUNS) + ":"
 	print "=========================="
