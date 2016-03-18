@@ -54,3 +54,17 @@ div.ui-selectmenu-open, #fwStrategy-menu, #aLogic-menu {
 #aLogic, #fwStrategy {
 	width: 250px;
 }
+
+.stop
+{
+    border: 1px solid #aaaaaa;
+    color: white !important;
+    background: red !important;
+}
+
+.start
+{
+	border: 1px solid #aaaaaa;
+	color: white !important;
+	background: green !important;
+}

@@ -59,4 +59,12 @@ if (file_put_contents(SCRIPT_DIRECTORY . "/apps.py", $newAppsContent) === false)
 $command = "/usr/bin/python emulation.py --network generated_network_top.txt --fw-strategies " . $_POST["fwStrategy"];
 exec("cd " . SCRIPT_DIRECTORY . " && " . $command . " > log.txt 2>&1 &"); // run emulation.py in background (avoid stalling php-script)
 
+
+// Store settings in file for later use by visualizations
+$jsonData = array('aLogic'=> $_POST["aLogic"], 'fwStrategy' => $_POST["fwStrategy"]);
+$patterns = array("player::SVCBufferAdaptationLogic","player::SVCRateBasedAdaptationLogic");
+$replacements = array("buffer-based","rate-based");
+$jsonData['aLogic'] = str_replace($patterns, $replacements, $jsonData['aLogic']);
+
+file_put_contents(SCRIPT_DIRECTORY . "/settings.json", json_encode($jsonData));
 ?>

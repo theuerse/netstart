@@ -1,5 +1,6 @@
 var netvisURL ="../netvis/networkLayout.html?top=../netstart/pi-network/generated_network_top.txt";
 var mousePosition = {x: 0, y: 0};
+var pageTitle = "Emulation Launcher";
 
 var images = {
 		router: "res/img/blueRouter.svg",
@@ -20,6 +21,7 @@ var edgeInformation = {};
 var edgeCoolTipTimeout = {};
 var messageHideTimeout = {};
 var emulationStateCheckInterval = {};
+var emulationRunning = false;
 var topologyFile;
 
 var arrowRight = '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>';
@@ -169,19 +171,31 @@ var options = {
 			// start observing the graph-container
 			setupGraphManipulationListener();
 
-      // update playback-button with current state of playback
-      updateEmulationState();
-      emulationStateCheckInterval = setInterval(function(){updateEmulationState();}, 2000);
+      // update emulation-start/stop-button with current state of emulation
+      $.post("isRunning.php").done(function(data){updateEmulationState(data === "1");});
+      emulationStateCheckInterval = setInterval(function(){
+          $.post("isRunning.php").done(function(data){updateEmulationState(data === "1");});
+        }, 2000);
 });
 
-function updateEmulationState(){
-  $.post("isRunning.php").done(function(data){
-    if(data === "1"){
-      $('#emulationBtn').button("option","label","stop emulation");
-    }else if(data === "0"){
-      $('#emulationBtn').button("option","label","start emulation");
-    }
-  });
+function updateEmulationState(shouldRun){
+  if(!emulationRunning && shouldRun){
+    updateEmulationBtn('stop');
+    $.getJSON("pi-network/settings.json", function(data){
+      $(document).prop('title', pageTitle + " -> " + data.aLogic + " , " + data.fwStrategy);
+    });
+  }else if(emulationRunning && !shouldRun){
+    updateEmulationBtn('start');
+    $(document).prop('title', pageTitle);
+  }
+  emulationRunning = shouldRun;
+}
+
+function updateEmulationBtn(newState){
+  $('#emulationBtn').removeClass('start');
+  $('#emulationBtn').removeClass('stop');
+  $('#emulationBtn').addClass(newState);
+  $('#emulationBtn').button("option","label",newState + " emulation");
 }
 
 // Adds a change-listener to the visjs-manipulation toolbar
@@ -326,9 +340,10 @@ function drawLegend(){
 						}
 					}else{
 							stopEmulation();
-							$(this).button("option","label","start emulation");
+							updateEmulationState(false);
 					}
 				});
+				updateEmulationBtn('start'); // initialize button
 
 				// opens a new tab displaying a network-overview
 				$('#legendList').append('<li class="list-group-item"><button id="showBtn">watch emulation</button></li>');
@@ -605,7 +620,7 @@ function showEmulationStartDialog(topologyFileContent){
 							console.log(data);
 							showMessage(data,"danger");
 						}else{
-							$('#playbackBtn').button("option","label","stop emulation");
+							updateEmulationState(true);
 
 							var overviewWindow = window.open(netvisURL, netvisURL);
 							overviewWindow.focus();
