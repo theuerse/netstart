@@ -326,5 +326,5 @@ def deployNetwork(NETWORK, PATHS, PI_START_SUFFIX, PI_END_SUFFIX, FW_STRATEGIES,
 		print "Pi:" + pi + "	Done!\n"
 
 	print "Network deployed on all PIs! Waiting 180 seconds so Pis can startup NFD and set routes!\n"
-	time.sleep(60)
+	time.sleep(30)
 	return g, pi_list, property_list
