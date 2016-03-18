@@ -1,4 +1,8 @@
 var netvisURL ="../netvis/networkLayout.html?top=../netstart/pi-network/generated_network_top.txt";
+var startupWaitingTime = 30; // [s]
+var remainingWaitingTime = startupWaitingTime;
+var waitingTimeout;
+var initiatingEmulationStartup = false;
 var mousePosition = {x: 0, y: 0};
 var pageTitle = "Emulation Launcher";
 
@@ -135,6 +139,11 @@ var options = {
 	    // hide javaScriptAlert - div, proof that js works
 	    $('#javaScriptAlert').hide();
 
+			//add busy - indicator
+			var deploymentSpinner = new Spinner({color: '#3170a9',top: '-12px',left: '10px',shadow: true, position: 'relative'}).spin();
+			$("#deploymentProgressIndicator").append(deploymentSpinner.el);
+			$("#deploymentProgressIndicator").hide();
+
 			// hide message container
 			$('#messageContainer').hide();
 
@@ -180,12 +189,22 @@ var options = {
 
 function updateEmulationState(shouldRun){
   if(!emulationRunning && shouldRun){
+    // emulation is running
     updateEmulationBtn('stop');
     $.getJSON("pi-network/settings.json", function(data){
       $(document).prop('title', pageTitle + " -> " + data.aLogic + " , " + data.fwStrategy);
     });
+    // current instance did not start the emulation -> enable watching emu right away
+    if(!initiatingEmulationStartup){
+      $('#showBtn').button("option","disabled",false);
+    }
   }else if(emulationRunning && !shouldRun){
+    // emulation is not running
     updateEmulationBtn('start');
+    $('#showBtn').button("option","disabled",true);
+    $("#deploymentProgressIndicator").hide();
+    initiatingEmulationStartup = false;
+    clearTimeout(waitingTimeout);
     $(document).prop('title', pageTitle);
   }
   emulationRunning = shouldRun;
@@ -196,6 +215,20 @@ function updateEmulationBtn(newState){
   $('#emulationBtn').removeClass('stop');
   $('#emulationBtn').addClass(newState);
   $('#emulationBtn').button("option","label",newState + " emulation");
+}
+
+function waitForStartup(){
+  if(remainingWaitingTime <= 0){
+    $("#deploymentProgressIndicator").hide();
+    $('#showBtn').button("option","disabled",false);
+    initiatingEmulationStartup = false;
+  }else{
+    $('#deploymentProgressIndicator p').html("Deploying network, " + remainingWaitingTime + " seconds remaining");
+    waitingTimeout = setTimeout(function(){
+      remainingWaitingTime--;
+      waitForStartup();
+    },1000);
+  }
 }
 
 // Adds a change-listener to the visjs-manipulation toolbar
@@ -347,7 +380,7 @@ function drawLegend(){
 
 				// opens a new tab displaying a network-overview
 				$('#legendList').append('<li class="list-group-item"><button id="showBtn">watch emulation</button></li>');
-				$('#showBtn').button().click(function(event){
+				$('#showBtn').button({disabled: true}).click(function(event){
 					var overviewWindow = window.open(netvisURL, netvisURL);
 					overviewWindow.focus();
 				});
@@ -620,10 +653,13 @@ function showEmulationStartDialog(topologyFileContent){
 							console.log(data);
 							showMessage(data,"danger");
 						}else{
+							initiatingEmulationStartup = true;
 							updateEmulationState(true);
 
-							var overviewWindow = window.open(netvisURL, netvisURL);
-							overviewWindow.focus();
+							// wait for deployment of network
+							remainingWaitingTime = startupWaitingTime;
+							$("#deploymentProgressIndicator").show();
+							waitForStartup();
 						}
 					});
 				$(this).dialog("close");
