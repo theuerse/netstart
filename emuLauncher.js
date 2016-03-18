@@ -1,5 +1,5 @@
 var netvisURL ="../netvis/networkLayout.html?top=../netstart/pi-network/generated_network_top.txt";
-var startupWaitingTime = 30; // [s]
+var startupWaitingTime = 90; // [s]
 var remainingWaitingTime = startupWaitingTime;
 var waitingTimeout;
 var initiatingEmulationStartup = false;
