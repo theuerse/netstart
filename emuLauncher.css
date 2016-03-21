@@ -63,6 +63,7 @@ div.ui-selectmenu-open, #fwStrategy-menu, #aLogic-menu {
 {
     border: 1px solid #aaaaaa;
     color: white !important;
+    text-shadow: 0 0 5px black;
     background: red !important;
 }
 
@@ -70,6 +71,7 @@ div.ui-selectmenu-open, #fwStrategy-menu, #aLogic-menu {
 {
 	border: 1px solid #aaaaaa;
 	color: white !important;
+	text-shadow: 0 0 5px black;
 	background: green !important;
 }
 
