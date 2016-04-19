@@ -28,6 +28,11 @@ RECORD_RTLOGGING = False
 RECORDING_SOURCEDIR ="/run/shm"
 RECORDING_TARGETDIR = ""
 
+def deleteFile(path):
+	if os.path.isfile(path):
+		os.remove(path)
+	return
+
 #argument parsing
 arg_parser = argparse.ArgumentParser(description="Script for Running Emulations on the PI-Network")
 arg_parser.add_argument("--network", action="store", dest="network", default="random", help="Network Topology to deploy, If set to random a random topology is generated based on parameters in rand_network.py for each emulation run")
@@ -51,6 +56,10 @@ else:
 	DESTINATION_FOLDER = arguments.resultFolder
 
 RECORDING_TARGETDIR = "./recordings/" + datetime.now().strftime('%d_%m_%Y_%H:%M')
+
+# remove old generated .pyc files, or python does not "re-compile" them correctly
+deleteFile("apps.pyc")
+deleteFile("rand_network.pyc")
 
 print "Starting " + str(EMULATION_RUNS) + " Emulation(s): "
 
