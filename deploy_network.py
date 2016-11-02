@@ -136,7 +136,8 @@ def deployNetwork(NETWORK, PATHS, PI_START_SUFFIX, PI_END_SUFFIX, FW_STRATEGIES,
 																												 ": tbf rate " + str(link.bw_n1_to_n2) + "kbit burst " + str(int(burst)) + " latency " + str(LATENCY) + "ms") #from n1
 		#delays for n1 to n2
 		netman_handle = str(handle_offset+(nodes+1)*2+int(n2))
-		commands[ip1.replace(EMU_PREFIX, MNG_PREFIX)].append("sudo tc qdisc add dev eth0 parent " + str(handle_offset+nodes+1+int(n2)) + ":" + str(int(n2)+1) + " handle " + netman_handle + " netem delay " + str(link.delay_n1_to_n2) + "ms")
+		commands[ip1.replace(EMU_PREFIX, MNG_PREFIX)].append("sudo tc qdisc add dev eth0 parent " + str(handle_offset+nodes+1+int(n2)) + ":" + str(int(n2)+1) + " handle " + netman_handle + " netem delay " + str(link.delay_n1_to_n2) + "ms" +
+		str(link.loss_n1_to_n2))
 		#sudo tc qdisc add dev eth0 parent 33:1 handle 9999 netem delay 10ms
 
 
@@ -164,7 +165,8 @@ def deployNetwork(NETWORK, PATHS, PI_START_SUFFIX, PI_END_SUFFIX, FW_STRATEGIES,
 
 		#delays for n2 to n1
 		netman_handle = str(handle_offset+(nodes+1)*2+int(n1))
-		commands[ip2.replace(EMU_PREFIX, MNG_PREFIX)].append("sudo tc qdisc add dev eth0 parent " + str(handle_offset+nodes+1+int(n1)) + ":" + str(int(n1)+1) + " handle " + netman_handle + " netem delay " + str(link.delay_n2_to_n1) + "ms")
+		commands[ip2.replace(EMU_PREFIX, MNG_PREFIX)].append("sudo tc qdisc add dev eth0 parent " + str(handle_offset+nodes+1+int(n1)) + ":" + str(int(n1)+1) + " handle " + netman_handle + " netem delay " + str(link.delay_n2_to_n1) + "ms" +
+		str(link.loss_n2_to_n1))
 
 	print "Configuring NFDs:"
 
