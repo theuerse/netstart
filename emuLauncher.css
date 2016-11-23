@@ -78,3 +78,29 @@ div.ui-selectmenu-open, #fwStrategy-menu, #aLogic-menu {
 #deploymentProgressIndicator {
 	margin-bottom: 2px;
 }
+
+select {
+  width: 10em;
+}
+
+#lossImg {
+  width: 400px;
+  vertical-align: top;
+}
+
+.glyphicon:before { margin-right: 10px; }
+
+#lossParameterSet label {
+  width: 2em;
+}
+
+#edgeTitle {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+fieldset, #lossImgContainer {
+  display: inline;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}

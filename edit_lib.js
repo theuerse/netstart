@@ -2,7 +2,7 @@
 // Basic settings and functions for Netedit (extracted to be reused e.g. in Netstart)
 // Main-version of this file is found in the Netedit-Project
 // (https://github.com/theuerse/netedit)
-// v1.0
+// v1.1 (after adding packetloss - support)
 //
 
 var mousePosition = {x: 0, y: 0};
@@ -37,6 +37,10 @@ var colors = ["#0247fe","#8601af","#66b032","#fe2712","#fefe33","#fb9902",
 var nodeColors = {border: 'rgba(255,255,255,0.0)', background: 'rgba(255,255,255,0.0)',
 highlight: {border: 'rgba(255,0,0,1.0)', background: 'rgba(255,255,255,0.0)'},
 hover: {border: 'rgba(255,255,255,0.0)', background: 'rgba(255,255,255,0.0)'}};
+
+var zeroLoss = "random 0";
+var temp = {lossRight: undefined, lossLeft: undefined};
+var printLossString; // variable containing the function for printing the selected loss value
 
 var options = {
   // specify randomseed => network is the same at every startup
@@ -85,7 +89,9 @@ var options = {
           edgeInformation[data.id] = {bandwidthRight: getRandomNumberWithRange(bandwidthPresetLimits[0], bandwidthPresetLimits[1]),
             bandwidthLeft: getRandomNumberWithRange(bandwidthPresetLimits[0], bandwidthPresetLimits[1]),
             delayRight: getRandomNumberWithRange(delayPresetLimits[0], delayPresetLimits[1]),
-            delayLeft: getRandomNumberWithRange(delayPresetLimits[0], delayPresetLimits[1])};
+            delayLeft: getRandomNumberWithRange(delayPresetLimits[0], delayPresetLimits[1]),
+            lossRight: undefined,
+            lossLeft: undefined};
             updateEdgeWidth();
 
             if($('#addEdgeToggle').is(':checked')){
@@ -167,7 +173,6 @@ var options = {
     // zoom to 100%
     network.moveTo({scale: 1.0});
   }
-
 
   // Methods drawing / maintaining the UI
   // Ends the repeated adding of edges and resets the corresponding button
@@ -292,7 +297,8 @@ var options = {
           to: parseInt(edgeInfo[1]), width: width, font: {align: 'bottom'}});
 
           edgeInformation[edgeId]={bandwidthRight: parseInt(edgeInfo[2]),bandwidthLeft: parseInt(edgeInfo[3]),
-            delayRight: parseInt(edgeInfo[4]), delayLeft: parseInt(edgeInfo[5])};
+            delayRight: parseInt(edgeInfo[4]), delayLeft: parseInt(edgeInfo[5]),
+            lossRight: edgeInfo[6], lossLeft: edgeInfo[7]};
           }else if(part == 2){
             // update node type (Client / Server) => visual apperance
             // and relationship type color (client and server have matching colors, for now)
@@ -332,14 +338,36 @@ var options = {
       function getTopologyFile(){
         var fileBuffer = [];
         var info;
+        var entry;
         fileBuffer.push("#number of nodes");
         fileBuffer.push(nodes.length); // e.g. 20
 
-        fileBuffer.push("#nodes setting (n1,n2,bandwidth in kbits a -> b, bandwidth in kbits a <- b, delay a -> b in ms, delay b -> a in ms");
+        var header = "#nodes setting (n1,n2,bandwidth in kbits a -> b, bandwidth in kbits a <- b, delay a -> b in ms, delay b -> a in ms";
+        if(isLossMentioned()){
+          header += ", loss a -> b, loss a <- b";
+        }
+        fileBuffer.push(header);
         edges.forEach(function(edge){
           info = edgeInformation[edge.id];
-          fileBuffer.push(edge.from + "," + edge.to + "," + info.bandwidthRight + "," +
-          info.bandwidthLeft + "," + info.delayRight + "," + info.delayLeft);
+
+          entry = edge.from + "," + edge.to + "," + info.bandwidthRight + "," +
+          info.bandwidthLeft + "," + info.delayRight + "," + info.delayLeft;
+
+          if(info.lossRight !== undefined && info.lossRight !== "undefined"){
+            entry += "," + info.lossRight;
+          } else if(info.lossLeft !== undefined && info.lossLeft !== "undefined"){
+            // if lossLeft is present, lossRight must be presend, at least as a placeholder
+            entry += "," + zeroLoss; // '... netem random 0' equates to no loss at all when executed
+          }
+
+          if(info.lossLeft !== undefined && info.lossLeft !== "undefined"){
+            entry += "," + info.lossLeft;
+          }else if(info.lossRight !== undefined && info.lossRight !== "undefined"){
+              // if lossRight is present, lossLeft must be presend, at least as a placeholder
+            entry += "," + zeroLoss;
+          }
+
+          fileBuffer.push(entry);
         });
 
         fileBuffer.push("#properties (Client, Server)");
@@ -379,6 +407,22 @@ var options = {
 
         fileBuffer.push("#eof //do not delete this");
         return fileBuffer.join("\n");
+      }
+
+      // returns true if there is loss defined in one edge
+      function isLossMentioned(){
+        var mentioned = false;
+
+        edges.forEach(function(edge){
+          info = edgeInformation[edge.id];
+          if(info.lossRight !== undefined && info.lossRight !== "undefined") {
+            mentioned=true;
+          }
+          if(info.lossLeft !== undefined && info.lossLeft !== "undefined") {
+            mentioned = true;
+          }
+        });
+        return mentioned;
       }
 
       // changes the respective width of edges according to the relation
@@ -468,8 +512,8 @@ var options = {
 
         $( "#edgeDialog" ).dialog({
           resizable: true,
-          width: 350,
-          height:300,
+          width: 450,
+          height:450,
           modal: true,
           open: function(event, ui){
             var edge = edges.get(selectedEdgeId);
@@ -512,6 +556,19 @@ var options = {
 
             $(".spinner").css("width",50); // constrain width of input-elements
 
+            // temporary cache for left/right loss value (allow for 'Cancel')
+            temp.lossRight = "" + edgeInfo.lossRight;
+            temp.lossLeft = "" + edgeInfo.lossLeft;
+            $("#lossRight").html(temp.lossRight);
+            $("#lossLeft").html(temp.lossLeft);
+
+            $("#lossRightBtn").button().on( "click", function() {
+              showLossParameterDialog("lossRight");
+            });
+
+            $("#lossLeftBtn").button().on( "click", function() {
+              showLossParameterDialog("lossLeft");
+            });
           },
           buttons: {
             "Ok": function() {
@@ -522,6 +579,9 @@ var options = {
               edgeInformation[selectedEdgeId].bandwidthLeft = $("#bandwidthLeft").spinner("value");
               edgeInformation[selectedEdgeId].delayRight = $("#delayRight").spinner("value");
               edgeInformation[selectedEdgeId].delayLeft = $("#delayLeft").spinner("value");
+              edgeInformation[selectedEdgeId].lossRight = temp.lossRight;
+              edgeInformation[selectedEdgeId].lossLeft = temp.lossLeft;
+
               $( this ).dialog( "close" );
               updateEdgeWidth(); // display possible changes in bandwidth
             },
@@ -533,6 +593,159 @@ var options = {
         });
       }
 
+      //
+      // Loss-Dialog-Methods
+      //
+
+      // Displays a dialog allowing for the change of the loss parameters of a edge
+      // (only one direction at a time)
+      function showLossParameterDialog(property){
+        var lossString = temp[property];
+
+
+        $( "#lossDialog" ).dialog({
+          modal: true,
+          width: 800,
+          height:450,
+          buttons: {
+            "Ok": function() {
+              // update temporary loss-settings for this edge
+              temp[property] = printLossString();
+              $("#" + property).html(temp[property]);
+              $(this).dialog( "close" );
+            },
+            Cancel: function() {
+              $(this).dialog('close');
+            }
+          }
+        });
+
+
+        // refresh view
+        if(property === "lossRight"){
+          $("#lossTypeLegend").html("Loss-Type " + arrowRight);
+        }else {
+          $("#lossTypeLegend").html("Loss-Type " + arrowLeft);
+        }
+
+        $('#lossSelect').val(categorize(lossString));
+
+        $("#lossSelect").on('change', function(){
+          var tmpLossString = printLossString(); // try to carry over as much as possible
+          updateLossParameterView($(this).val());
+          fillInLossStringParams(tmpLossString);
+        });
+
+
+        // establish structure
+        updateLossParameterView(categorize(lossString));
+        // fill in the blanks
+        fillInLossStringParams(lossString);
+      }
+
+      // tries to insert given parameters into existing controls (spinners)
+      function fillInLossStringParams(lossString){
+        if(lossString === undefined) return;
+
+        var parts = lossString.split(" ");
+        var fields = $("#lossParameterSet").find(".spinner");
+
+        var index;
+        for(index = 1; index <= Math.min(parts.length-1, fields.length); index++){
+          $(fields[index-1]).spinner("value",parts[index]);
+        }
+      }
+
+      // Arrange the needed input-facility for a given loss-type
+      function updateLossParameterView(newType){
+
+        // refresh parameter-view
+        $("#lossParameterSet").empty();
+        $("#lossParameterSet").append('<legend>Parameters</legend>');
+
+        switch(newType){
+          case undefined:
+          case "undefined":
+            $("#lossInfoText").html("No artificial loss introduced.");
+            printLossString = function(){return "undefined";};
+            break;
+          case "random":
+            $("#lossInfoText").html("Adds an independent loss probability for the packets.");
+            $("#lossParameterSet").append('<label for="param_p">p </label><input title="independent loss probability" class="spinner" id="param_p"/><br>');
+            printLossString = function(){return "random " + $("#param_p").val();};
+            break;
+          case "state":
+            $("#lossInfoText").html("Adds packet losses according to the 4-state Markov chain.");
+            $("#lossParameterSet").append('<label for="param_p13">p13 </label><input title="transition probability from state 1 (good reception) to 3 (burst losses) " class="spinner" id="param_p13"/><br>');
+            $("#lossParameterSet").append('<label for="param_p31">p31 </label><input title="transition probability from state 3 (burst losses) to 1 (good reception)" class="spinner" id="param_p31"/><br>');
+            $("#lossParameterSet").append('<label for="param_p32">p32 </label><input title="transition probability from state 3 (burst losses) to 2 (good reception within a burst)" class="spinner" id="param_p32"/><br>');
+            $("#lossParameterSet").append('<label for="param_p14">p14 </label><input title="transition probability from state 1 (good reception) to 4 (independent losses)" class="spinner" id="param_p14"/><br>');
+            printLossString = function(){return "state " + $("#param_p13").val() + " " + $("#param_p31").val() + " " +
+              $("#param_p32").val() + " "  + $("#param_p14").val();};
+            break;
+          case "bernoulli":
+            $("#lossInfoText").html("Special case of the Gilbert-Elliot loss model (independent losses).");
+            $("#lossParameterSet").append('<label for="param_p">p </label><input title="independent loss probability" class="spinner" id="param_p"/><br>');
+            printLossString = function(){return "gemodel " + $("#param_p").val();};
+            break;
+          case "simpleGilbert":
+            $("#lossInfoText").html("Special case of the Gilbert-Elliot loss model (simple bursty packetloss, few parameters available.)");
+            $("#lossParameterSet").append('<label for="param_p">p </label><input title="loss probability" class="spinner" id="param_p"/><br>');
+            $("#lossParameterSet").append('<label for="param_r">r </label><input title="burst duration" class="spinner" id="param_r"/><br>');
+            printLossString = function(){return "gemodel " + $("#param_p").val() + " " + $("#param_r").val();};
+            break;
+          case "gilbert":
+            $("#lossInfoText").html("Special case of the Gilbert-Elliot loss model (bursty packetloss, most parameters available).");
+            $("#lossParameterSet").append('<label for="param_p">p </label><input title="loss probability" class="spinner" id="param_p"/><br>');
+            $("#lossParameterSet").append('<label for="param_1-r">1-r </label><input title="burst duration" class="spinner" id="param_1-r"/><br>');
+            $("#lossParameterSet").append('<label for="param_1-h">1-h </label><input title="loss probability in the bad state (B)" class="spinner" id="param_1-h"/><br>');
+            printLossString = function(){return "gemodel " + $("#param_p").val() + " " + $("#param_1-r").val() +
+              " " + $("#param_1-h").val();};
+            break;
+          case "gilbertElliot":
+            $("#lossInfoText").html("Realizes bursty error patterns (bursty packetloss, all parameters available).");
+            $("#lossParameterSet").append('<label for="param_p">p </label><input title="loss probability" class="spinner" id="param_p"/><br>');
+            $("#lossParameterSet").append('<label for="param_1-r">1-r </label><input title="burst duration" class="spinner" id="param_1-r"/><br>');
+            $("#lossParameterSet").append('<label for="param_1-h">1-h </label><input title="loss probability in the bad state (B)" class="spinner" id="param_1-h"/><br>');
+            $("#lossParameterSet").append('<label for="param_1-h">1-k </label><input title="loss probability in the good state (G)" class="spinner" id="param_1-k"/><br>');
+            printLossString = function(){return "gemodel " + $("#param_p").val() + " " + $("#param_1-r").val() + " " +
+              $("#param_1-h").val() + " " + $("#param_1-k").val();};
+            break;
+          default: // e.g. none
+            console.log("error parsing loss-string: " + newType);
+            break;
+        }
+
+        if(newType === undefined || newType == "undefined" || newType=="random"){
+          $('#lossImg').attr('src', '');
+        }else{
+          $('#lossImg').attr('src', 'res/img/' + newType + '.png');
+        }
+        $("#lossParameterSet .spinner").spinner({min: 0, max: 1, step: 0.0001});
+        $("#lossParameterSet").tooltip();
+      }
+
+      // Determines the correct name for a kind of loss
+      // From the name directly, or from the 'tc-command' and its parameters
+      function categorize(lossString){
+        if(lossString === undefined) return "undefined";
+        var parts = lossString.split(" ");
+        switch(parts[0]){
+          case "undefined":
+          case "random":
+          case "state":
+          case "bernoulli":
+          case "simpleGilbert":
+          case "gilbert":
+          case "gilbertElliot":
+            return parts[0];
+          case "gemodel":
+            if(parts.length === 5) return "gilbertElliot";
+            if(parts.length === 4) return "gilbert";
+            if(parts.length === 3) return "simpleGilbert";
+            return "bernoulli";
+        }
+      }
 
       //
       // Edge-Cooltip Methods
@@ -544,7 +757,7 @@ var options = {
 
         var title = 'Pi #' + edges.get(id).from + '&emsp; &#x21c4 &emsp;' + 'Pi #' + edges.get(id).to;
         if($("#" + id).length === 0){ // add div if not already present
-          $("body").append('<div id="' + id + '" title="'+ title + '"></div>');
+          $("body").append('<div id="' + id + '" class="cooltip" title="'+ title + '"></div>');
 
           $('#' + id).dialog({
             create: function(event, ui) {
@@ -561,12 +774,19 @@ var options = {
               });
 
               // update the the tooltips content when it is (re) - opened
-              $("#" + id).html(
-                '<p>' + 'Bandwidth <b>' + arrowRight +'</b> : ' + edgeInfo.bandwidthRight + '[kbps]</p>' +
-                '<p>' + 'Bandwidth <b>' + arrowLeft +'</b> : ' + edgeInfo.bandwidthLeft + '[kbps]</p>' +
-                '<p>' + 'Delay <b>' + arrowRight + '</b> : ' + edgeInfo.delayRight + '[ms]</p>' +
-                '<p>' + 'Delay <b>' + arrowLeft + '</b> : ' + edgeInfo.delayLeft + '[ms]</p>'
-              );
+              var coolTipContents = '<p>' + 'Bandwidth <b>' + arrowRight +'</b> : ' + edgeInfo.bandwidthRight + '[kbps]</p>' +
+              '<p>' + 'Bandwidth <b>' + arrowLeft +'</b> : ' + edgeInfo.bandwidthLeft + '[kbps]</p>' +
+              '<p>' + 'Delay <b>' + arrowRight + '</b> : ' + edgeInfo.delayRight + '[ms]</p>' +
+              '<p>' + 'Delay <b>' + arrowLeft + '</b> : ' + edgeInfo.delayLeft + '[ms]</p>';
+
+              if(edgeInfo.lossRight !== undefined && edgeInfo.lossRight !== "undefined"){
+                coolTipContents += '<p>' + 'Loss <b>' + arrowRight + '</b> : ' + edgeInfo.lossRight + '</p>';
+              }
+              if(edgeInfo.lossLeft !== undefined && edgeInfo.lossLeft !== "undefined"){
+                coolTipContents += '<p>' + 'Loss <b>' + arrowLeft + '</b> : ' + edgeInfo.lossLeft + '</p>';
+              }
+
+              $("#" + id).html(coolTipContents);
             },
             show: {
               effect: 'fade',

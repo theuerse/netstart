@@ -16,6 +16,20 @@ from datetime import datetime
 from gather_results import *
 import rand_network as rand_network
 from recorder import *
+import shutil
+import sys
+
+class Unbuffered(object):
+   def __init__(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def __getattr__(self, attr):
+       return getattr(self.stream, attr)
+#stop buffering of output for this script
+sys.stdout = Unbuffered(sys.stdout)
+
 
 #default parameters
 
@@ -65,46 +79,51 @@ print "Starting " + str(EMULATION_RUNS) + " Emulation(s): "
 
 for emu_run in range(0,EMULATION_RUNS):
 
-	#check if run already has been performed:
-	if os.path.exists(DESTINATION_FOLDER + "/run_" + str(emu_run)):
-		print "Run: " + DESTINATION_FOLDER + "/run_" + str(emu_run) + " exists.. SKIPPING!"
-		continue
+	try:
+		#check if run already has been performed:
+		if os.path.exists(DESTINATION_FOLDER + "/run_" + str(emu_run)):
+			print "Run: " + DESTINATION_FOLDER + "/run_" + str(emu_run) + " exists.. SKIPPING!"
+			continue
 
-	print "=========================="
-	print "Performing Emulation Run " + str(emu_run+1) + "/" + str(EMULATION_RUNS) + ":"
+		print "=========================="
+		print "Performing Emulation Run " + str(emu_run+1) + "/" + str(EMULATION_RUNS) + ":"
 
-	if NETWORK == "random":
-		network_top_file = rand_network.genRandomNetwork(emu_run)
-	else:
-		network_top_file = NETWORK
+		if NETWORK == "random":
+			network_top_file = rand_network.genRandomNetwork(emu_run)
+		else:
+			network_top_file = NETWORK
 
-	#deploy the network and the apps and cleansup the logs
-	graph, pi_list, property_list = deployNetwork(network_top_file, PATHS, PI_START_SUFFIX, PI_END_SUFFIX,
+		#deploy the network and the apps and cleansup the logs
+		graph, pi_list, property_list = deployNetwork(network_top_file, PATHS, PI_START_SUFFIX, PI_END_SUFFIX,
 																		FW_STRATEGIES, MNG_PREFIX, EMU_PREFIX, GATEWAY)
 
-	#start logging
-	startLogging(pi_list, PI_START_SUFFIX, MNG_PREFIX)
-	if RECORD_RTLOGGING:
-		if not os.path.exists(RECORDING_TARGETDIR):
-			os.makedirs(RECORDING_TARGETDIR)
-		startRecording(RECORDING_SOURCEDIR, RECORDING_TARGETDIR)
+		#start logging
+		startLogging(pi_list, PI_START_SUFFIX, MNG_PREFIX)
+		if RECORD_RTLOGGING:
+			if not os.path.exists(RECORDING_TARGETDIR):
+				os.makedirs(RECORDING_TARGETDIR)
+			startRecording(RECORDING_SOURCEDIR, RECORDING_TARGETDIR)
 
-	#start the apps
-	client_ips = startApps(pi_list, property_list, MNG_PREFIX, PI_START_SUFFIX)
+		#start the apps
+		client_ips = startApps(pi_list, property_list, MNG_PREFIX, PI_START_SUFFIX)
 
-	#loop until all clients finished
-	waitForAppsToFinish(client_ips)
+		#loop until all clients finished
+		waitForAppsToFinish(client_ips)
 
-	#stop logging
-	stopLogging(pi_list, PI_START_SUFFIX, MNG_PREFIX)
-	if RECORD_RTLOGGING:
-		stopRecording()
+		#stop logging
+		stopLogging(pi_list, PI_START_SUFFIX, MNG_PREFIX)
+		if RECORD_RTLOGGING:
+			stopRecording()
 
-	#kill all NFDs
-	killNFDs(pi_list, MNG_PREFIX, PI_START_SUFFIX)
+		#kill all NFDs
+		killNFDs(pi_list, MNG_PREFIX, PI_START_SUFFIX)
 
-	# do not collect and store logs
-	#gatherResults(pi_list, MNG_PREFIX, DESTINATION_FOLDER, emu_run, client_ips, PI_START_SUFFIX)
+		# do not collect and store logs
+		#gatherResults(pi_list, MNG_PREFIX, DESTINATION_FOLDER, emu_run, client_ips, PI_START_SUFFIX)
 
-	print "Finished Emulation Run " + str(emu_run+1) + "/" + str(EMULATION_RUNS) + ":"
-	print "=========================="
+		print "Finished Emulation Run " + str(emu_run+1) + "/" + str(EMULATION_RUNS) + ":"
+		print "=========================="
+	except (BaseException):
+		print "Encountered Exception... Deleting Files in: " + DESTINATION_FOLDER + "/run_" + str(emu_run)
+		shutil.rmtree(DESTINATION_FOLDER + "/run_" + str(emu_run))
+		pass #pass on to next run
