@@ -10,7 +10,7 @@ define("SCRIPT_DIRECTORY", "pi-network");
 if(empty($_POST["topology"])){
   exit("given network-topology is empty");
 }
-if(!in_array($_POST["aLogic"], array("player::SVCBufferAdaptationLogic","player::SVCRateBasedAdaptationLogic"))){
+if(!in_array($_POST["aLogic"], array("buffer","rate"))){
   exit($_POST["aLogic"] . " is a unknown adaption-logic");
 }
 if(!in_array($_POST["fwStrategy"], array("saf", "broadcast", "best-route", "ncc", "omccrf"))){
